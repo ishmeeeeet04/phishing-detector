@@ -12,20 +12,19 @@ import os
 # ── STEP A: Load Real Dataset ──────────────────────────────────
 
 def load_data():
-    path = os.path.join("data", "emails.tsv")
-    
-    df = pd.read_csv(path, sep="\t", header=None, names=["label", "text"])
-    
-    # This dataset uses 'ham' = legitimate, 'spam' = phishing
-    # We rename to match our system
-    df["label"] = df["label"].map({"ham": "legitimate", "spam": "phishing"})
-    
+    path = os.path.join("data", "emails_real.csv")
+
+    if not os.path.exists(path):
+        print("ERROR: emails_real.csv not found.")
+        print("Run this first: python src/prepare_dataset.py")
+        exit()
+
+    df = pd.read_csv(path)
     df = df.dropna(subset=["label", "text"])
-    
+
     print(f"Total emails loaded : {len(df)}")
-    print(f"Phishing (spam)     : {sum(df.label == 'phishing')}")
-    print(f"Legitimate (ham)    : {sum(df.label == 'legitimate')}")
-    
+    print(f"Phishing            : {sum(df.label == 'phishing')}")
+    print(f"Legitimate          : {sum(df.label == 'legitimate')}")
     return df
 
 
