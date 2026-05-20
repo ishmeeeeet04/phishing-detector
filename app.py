@@ -25,19 +25,33 @@ def home():
 
 @app.route("/scan", methods=["POST"])
 def scan():
-    # When the frontend submits the email form, it hits this route
-    # request.json contains the data sent from the browser
     data = request.json
 
-    sender  = data.get("sender", "")
-    subject = data.get("subject", "")
-    body    = data.get("body", "")
+    if not data:
+        return jsonify({"error": "No data received"}), 400
 
-    # Run our detector engine
-    result = scan_email(sender, subject, body)
+    sender  = str(data.get("sender",  "")).strip()
+    subject = str(data.get("subject", "")).strip()
+    body    = str(data.get("body",    "")).strip()
 
-    # Send result back to browser as JSON
-    return jsonify(result)
+    # Reject if both subject and body are empty
+    if not subject and not body:
+        return jsonify({"error": "Subject or body is required"}), 400
+
+    # Reject if input is too large (prevents server overload)
+    if len(body) > 50000:
+        return jsonify({"error": "Email body too large (max 50,000 characters)"}), 400
+
+    if len(subject) > 500:
+        return jsonify({"error": "Subject too long (max 500 characters)"}), 400
+
+    try:
+        result = scan_email(sender, subject, body)
+        return jsonify(result)
+    except Exception as e:
+        # Never expose internal errors to the client
+        print(f"Scan error: {e}")
+        return jsonify({"error": "Analysis failed. Please try again."}), 500
 if __name__ == "__main__":
     debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     app.run(debug=debug_mode)
