@@ -7,8 +7,9 @@ import re
 import pickle
 import os
 
-MODEL_PATH      = os.path.join("models", "phishing_model.pkl")
-VECTORIZER_PATH = os.path.join("models", "vectorizer.pkl")
+BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH      = os.path.join(BASE_DIR, "..", "models", "phishing_model.pkl")
+VECTORIZER_PATH = os.path.join(BASE_DIR, "..", "models", "vectorizer.pkl")
 
 ml_model   = None
 vectorizer = None
