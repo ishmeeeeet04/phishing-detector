@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Phishing Email Detector</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 2.5rem; }
+    header h1 { font-size: 2rem; font-weight: 700; color: #f8fafc; }
+    header p  { color: #94a3b8; margin-top: 0.4rem; font-size: 0.95rem; }
+    .badge {
+      display: inline-block;
+      background: #1e293b; border: 1px solid #334155;
+      color: #38bdf8; font-size: 0.72rem;
+      padding: 0.2rem 0.6rem; border-radius: 999px;
+      margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    .card {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 14px; padding: 1.8rem; margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1.2rem;
+    }
+
+    .form-group { margin-bottom: 1.1rem; }
+    label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem; }
+    input, textarea {
+      width: 100%; background: #0f1117; border: 1px solid #334155;
+      border-radius: 8px; color: #e2e8f0; font-size: 0.95rem;
+      padding: 0.65rem 0.9rem; outline: none;
+      transition: border-color 0.2s; font-family: inherit; resize: vertical;
+    }
+    input:focus, textarea:focus { border-color: #38bdf8; }
+    textarea { min-height: 130px; }
+
+    .btn {
+      width: 100%; padding: 0.85rem; background: #0ea5e9;
+      color: #fff; font-size: 1rem; font-weight: 600;
+      border: none; border-radius: 10px; cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover   { background: #0284c7; }
+    .btn:active  { transform: scale(0.98); }
+    .btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+    #results { display: none; }
+
+    .score-wrap {
+      display: flex; align-items: center;
+      gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .ring-container { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+    .ring-container svg { transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: #1e3a4a; stroke-width: 10; }
+    .ring-fill {
+      fill: none; stroke-width: 10; stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s ease, stroke 0.4s;
+    }
+    .ring-label {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ring-label .score-num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .ring-label .score-sub { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+    .verdict-block h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .verdict-block p  { color: #94a3b8; font-size: 0.9rem; }
+
+    .safe       { color: #22c55e; }
+    .suspicious { color: #f59e0b; }
+    .phishing   { color: #ef4444; }
+
+    .breakdown-grid {
+      display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.4rem;
+    }
+    .breakdown-box {
+      flex: 1; min-width: 120px; background: #0f1117;
+      border: 1px solid #334155; border-radius: 10px;
+      padding: 0.9rem; text-align: center;
+    }
+    .breakdown-box .bval { font-size: 1.4rem; font-weight: 700; }
+    .breakdown-box .blbl { font-size: 0.75rem; color: #64748b; margin-top: 3px; }
+
+    .url-tag {
+      display: inline-block; background: #0f1117;
+      border: 1px solid #334155; border-radius: 6px;
+      padding: 0.3rem 0.6rem; font-size: 0.78rem;
+      color: #94a3b8; margin: 0.2rem; word-break: break-all;
+    }
+
+    .reasons-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .reasons-list li {
+      background: #0f1117; border-left: 3px solid #334155;
+      border-radius: 0 8px 8px 0; padding: 0.6rem 0.9rem;
+      font-size: 0.88rem; color: #cbd5e1;
+    }
+
+    .spinner {
+      display: none; width: 20px; height: 20px;
+      border: 3px solid #334155; border-top-color: #38bdf8;
+      border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0.8rem auto 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    hr { border: none; border-top: 1px solid #334155; margin: 1.2rem 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">AI-Powered Security Tool</div>
+    <h1>🛡️ Phishing Email Detector</h1>
+    <p>Paste any email below to instantly analyze it for phishing signals.</p>
+  </header>
+
+  <!-- Input Card -->
+  <div class="card">
+    <h2>Email Input</h2>
+    <div class="form-group">
+      <label>Sender Email Address</label>
+      <input type="text" id="sender" placeholder="e.g. security@paypa1.com" />
+    </div>
+    <div class="form-group">
+      <label>Subject Line</label>
+      <input type="text" id="subject" placeholder="e.g. URGENT: Your account has been suspended" />
+    </div>
+    <div class="form-group">
+      <label>Email Body</label>
+      <textarea id="body" placeholder="Paste the full email body here, including any links..."></textarea>
+    </div>
+    <button class="btn" id="scanBtn" onclick="scanEmail()">Analyze Email</button>
+    <div class="spinner" id="spinner"></div>
+  </div>
+
+  <!-- Results Card -->
+  <div class="card" id="results">
+    <h2>Analysis Results</h2>
+
+    <!-- Score ring + verdict -->
+    <div class="score-wrap">
+      <div class="ring-container">
+        <svg viewBox="0 0 110 110" width="110" height="110">
+          <circle class="ring-bg"   cx="55" cy="55" r="45"/>
+          <circle class="ring-fill" cx="55" cy="55" r="45"
+                  id="ringFill" stroke-dasharray="283" stroke-dashoffset="283"/>
+        </svg>
+        <div class="ring-label">
+          <span class="score-num" id="scoreNum">0</span>
+          <span class="score-sub">/ 100</span>
+        </div>
+      </div>
+      <div class="verdict-block">
+        <h3 id="verdictText">—</h3>
+        <p  id="verdictDesc">—</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <!-- Score breakdown -->
+    <label style="display:block; margin-bottom:0.7rem;">Score breakdown</label>
+    <div class="breakdown-grid">
+      <div class="breakdown-box">
+        <div class="bval" id="mlScoreDisplay"   style="color:#38bdf8;">—</div>
+        <div class="blbl">AI model</div>
+      </div>
+      <div class="breakdown-box">
+        <div class="bval" id="ruleScoreDisplay" style="color:#a78bfa;">—</div>
+        <div class="blbl">Rule engine</div>
+      </div>
+      <div class="breakdown-box">
+        <div class="bval" id="urlScoreDisplay"  style="color:#fb923c;">—</div>
+        <div class="blbl">URL analysis</div>
+      </div>
+    </div>
+
+    <hr/>
+
+    <!-- URLs detected -->
+    <div id="urlsSection" style="display:none; margin-bottom:1.2rem;">
+      <label style="display:block; margin-bottom:0.5rem;">URLs detected in email</label>
+      <div id="urlsList"></div>
+      <hr/>
+    </div>
+
+    <!-- Reasons -->
+    <label style="display:block; margin-bottom:0.7rem;">Why this verdict?</label>
+    <ul class="reasons-list" id="reasonsList"></ul>
+
+  </div><!-- ✅ correct closing tag for results card -->
+
+</div>
+
+<script>
+  async function scanEmail() {
+    const sender  = document.getElementById("sender").value.trim();
+    const subject = document.getElementById("subject").value.trim();
+    const body    = document.getElementById("body").value.trim();
+
+    if (!subject && !body) {
+      alert("Please enter at least a subject or body.");
+      return;
+    }
+
+    const btn = document.getElementById("scanBtn");
+    btn.disabled = true;
+    btn.textContent = "Analyzing...";
+    document.getElementById("spinner").style.display = "block";
+    document.getElementById("results").style.display = "none";
+
+    try {
+      const response = await fetch("/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender, subject, body })
+      });
+
+      if (!response.ok) {
+        throw new Error("Server returned status " + response.status);
+      }
+
+      const data = await response.json();
+      displayResults(data);
+
+    } catch (err) {
+      alert("Error: " + err.message);
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Analyze Email";
+      document.getElementById("spinner").style.display = "none";
+    }
+  }
+
+  function displayResults(data) {
+    const score   = data.score   ?? 0;
+    const verdict = data.verdict ?? "SAFE";
+    const reasons = data.reasons ?? [];
+    const urls    = data.urls_found ?? [];
+
+    // Score ring
+    document.getElementById("scoreNum").textContent = score;
+    const offset = 283 - (score / 100) * 283;
+    const ring   = document.getElementById("ringFill");
+    ring.style.strokeDashoffset = offset;
+
+    const colorMap = {
+      "SAFE":       { stroke: "#22c55e", cls: "safe",       desc: "This email appears legitimate." },
+      "SUSPICIOUS": { stroke: "#f59e0b", cls: "suspicious", desc: "Treat with caution. Do not click links." },
+      "PHISHING":   { stroke: "#ef4444", cls: "phishing",   desc: "High risk. Do not interact with this email." },
+    };
+    const c = colorMap[verdict] || colorMap["SAFE"];
+    ring.style.stroke = c.stroke;
+
+    const verdictEl = document.getElementById("verdictText");
+    verdictEl.textContent = verdict;
+    verdictEl.className   = c.cls;
+    document.getElementById("verdictDesc").textContent = c.desc;
+
+    // Breakdown
+    if (data.breakdown) {
+      document.getElementById("mlScoreDisplay").textContent   = data.breakdown.ml_score   + "/100";
+      document.getElementById("ruleScoreDisplay").textContent = data.breakdown.rule_score + "/100";
+      document.getElementById("urlScoreDisplay").textContent  = data.breakdown.url_score  + "/100";
+    }
+
+    // URLs
+    const urlsSection = document.getElementById("urlsSection");
+    if (urls.length > 0) {
+      urlsSection.style.display = "block";
+      document.getElementById("urlsList").innerHTML =
+        urls.map(u => `<span class="url-tag">${u}</span>`).join("");
+    } else {
+      urlsSection.style.display = "none";
+    }
+
+    // Reasons
+    const list = document.getElementById("reasonsList");
+    list.innerHTML = reasons.length > 0
+      ? reasons.map(r => `<li>⚠ ${r}</li>`).join("")
+      : `<li>✓ No suspicious signals detected.</li>`;
+
+    // Show results
+    document.getElementById("results").style.display = "block";
+    document.getElementById("results").scrollIntoView({ behavior: "smooth" });
+  }
+</script>
+</body>
+</html>
