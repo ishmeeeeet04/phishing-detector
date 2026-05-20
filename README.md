@@ -26,7 +26,7 @@
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Language | Python 3.14 | Core development |
+| Language | Python 3.12 | Core development |
 | ML | Scikit-learn, TF-IDF | Email classification |
 | Backend | Flask | REST API + web server |
 | Frontend | HTML, CSS, JavaScript | Interactive dashboard |
