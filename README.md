@@ -117,7 +117,7 @@ Open http://127.0.0.1:5000 in your browser.
 | F1-Score | 99% | 96% |
 | **Overall Accuracy** | **98.3%** | |
 
-Trained on 5,572 real emails from the SMS Spam Collection dataset.
+Trained on real email data from the SpamAssassin Public Corpus — a standard benchmark dataset used in email security research.
 
 ---
 
@@ -141,3 +141,4 @@ Final Year B.Tech — Computer Science / Cybersecurity
 ---
 
 ⭐ If you found this useful, please star the repository!
+Built by Ishmeet Kaur — Final Year B.Tech CSE (Cybersecurity)
