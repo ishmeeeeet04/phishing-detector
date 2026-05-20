@@ -11,6 +11,8 @@
 > reputation checking via the VirusTotal API.
 
 ---
+![Dashboard](screenshots/dashboard.png)
+![Scan Result](screenshots/result.png)
 
 ## 🎯 Features
 
