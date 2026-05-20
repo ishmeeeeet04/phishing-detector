@@ -92,7 +92,7 @@ Open http://127.0.0.1:5000 in your browser.
 
 - **Sender:** security@paypa1.com
 - **Subject:** URGENT: Your account has been suspended
-- **Body:** Dear Customer, verify immediately or your account will be terminated. http://paypal-login.verify-account.xyz
+- **Body:** Dear Customer, verify immediately or your account will be terminated. http://example-phishing-test.com
 
 **Output:**
 
