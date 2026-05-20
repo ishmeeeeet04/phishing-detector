@@ -8,6 +8,20 @@ import os
 import time
 from dotenv import load_dotenv
 
+# Rate limiter — free VirusTotal API allows only 4 requests per minute
+_last_request_time = 0
+_MIN_REQUEST_INTERVAL = 16  # wait 16 seconds between requests (60s ÷ 4 = 15s + 1s buffer)
+
+def _wait_for_rate_limit():
+    global _last_request_time
+    now = time.time()
+    elapsed = now - _last_request_time
+    if elapsed < _MIN_REQUEST_INTERVAL:
+        wait_time = _MIN_REQUEST_INTERVAL - elapsed
+        print(f"[VirusTotal] Waiting {wait_time:.1f}s to respect rate limit...")
+        time.sleep(wait_time)
+    _last_request_time = time.time()
+
 # Load API key from .env file
 load_dotenv()
 API_KEY = os.getenv("VIRUSTOTAL_API_KEY")
@@ -33,6 +47,7 @@ def check_url_virustotal(url):
             "verdict":         "API_KEY_MISSING",
             "details":         "No VirusTotal API key found in .env file"
         }
+        _wait_for_rate_limit() 
 
     headers = {
         "x-apikey": API_KEY,
