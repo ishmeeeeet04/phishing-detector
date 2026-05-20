@@ -65,18 +65,27 @@ def check_sender(sender_email):
     # Check 3: Domain mismatch tricks
     # Real PayPal emails come from @paypal.com
     # Fake ones come from @paypal.support-login.com or @paypal.com.attacker.xyz
-    suspicious_patterns = [
-        r"@.+\..+\..{2,4}$",   # multiple subdomains before TLD
-    ]
-    for pattern in suspicious_patterns:
-        if re.search(pattern, sender_lower):
-            # Only flag if it's also pretending to be a known brand
-            known_brands = ["paypal", "amazon", "google", "microsoft", "apple", "bank", "netflix"]
-            for brand in known_brands:
-                if brand in sender_lower:
-                    score += 25
-                    reasons.append(f"Sender pretends to be '{brand}' but domain is suspicious")
-                    break
+    # AFTER — replace with this
+# Check for brand impersonation: brand word appears but NOT as the real domain
+# Real: @paypal.com, @amazon.com — Fake: @paypal.secure-login.com, @amazon-update.xyz
+brand_domains = {
+    "paypal":    "paypal.com",
+    "amazon":    "amazon.com",
+    "google":    "google.com",
+    "microsoft": "microsoft.com",
+    "apple":     "apple.com",
+    "netflix":   "netflix.com",
+    "bank":      None,   # no single legitimate domain for 'bank'
+}
+domain_part = sender_lower.split("@")[-1] if "@" in sender_lower else ""
+for brand, real_domain in brand_domains.items():
+    if brand in domain_part:
+        # If real_domain exists, only flag if the domain is NOT the real one
+        if real_domain is None or not (domain_part == real_domain or
+                                        domain_part.endswith("." + real_domain)):
+            score += 25
+            reasons.append(f"Sender pretends to be '{brand}' but uses a suspicious domain")
+            break
 
     # Check 4: Random-looking sender names
     # Example: xk29fnq@gmail.com  ← no real person has this name
