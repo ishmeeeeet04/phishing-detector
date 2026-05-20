@@ -38,7 +38,6 @@ def scan():
 
     # Send result back to browser as JSON
     return jsonify(result)
-
 if __name__ == "__main__":
-    # debug=True means Flask auto-restarts when you save code changes
-    app.run(debug=True)
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=debug_mode)
