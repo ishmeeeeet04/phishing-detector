@@ -85,14 +85,14 @@ def scan_email(sender, subject, body, use_virustotal=True):
     # 4. Weighted final score
     if urls:
         final_score = int(
-            (ml_score        * 0.35) +
-            (rule_score      * 0.30) +
-            (worst_url_score * 0.35)
+            (ml_score        * 0.30) +
+            (rule_score      * 0.40) +
+            (worst_url_score * 0.30)
         )
     else:
         final_score = int(
-            (ml_score   * 0.50) +
-            (rule_score * 0.50)
+            (ml_score   * 0.40) +
+            (rule_score * 0.60)
         )
 
     final_score = min(final_score, 100)
